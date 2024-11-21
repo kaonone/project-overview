@@ -1,88 +1,25 @@
 # Overview
-Kaon is a Bitcoin-native L1 blockchain with EVM composability, built by a security-first team to address systemic security risks inherent in bridge-, multisig-, oracle-, and rollup-based designs. 
+Kaon is a Bitcoin and UTXO native blockchain with cross-chain composability built by a security-first team. Our mission is to create a stronger fidelity of on-chain transfers of Bitcoin assets. The result is a decentralized consensus layer that not only offers the first cryptographically secure mirrored BTC, but is also bridge-less and oracle-less to make Bitcoin ecosystem interoperability secure, composable and scalable. 
 
-Current solutions either rely on centralized parties and points of failures, or do not allow for seamless integration of EVM environments within a UTXO model framework. All these are hindering the growth and potential of the BTC ecosystem. 
+# Architectural and Terminology Foundation
 
-Our mission is to solve these systemic issues. The result is a bridge-less and oracle-less essential infrastructure layer that not only offers the first cryptographically secure wrapped BTC, but goes further and makes Bitcoin interoperability secure, composable and scalable. 
+Kaon augments Bitcoin Nodes within the structure of Kaon to enable subprograms, which then introduces synthetic statefulness into Bitcoin. In doing so, we are able to implement on-chain programmability within Bitcoin, and facilitate high fidelity asset transfers of Bitcoin assets cross-chain.
 
-Kaon’s consensus model, UTXO native design, and UTXO and EVM information handling allows it  to give the user a combination of important functionalities that are unique only to Kaon. Some of the more pertinent ones include:
-- Avoiding centralisation risk
-- Having control over the entire transaction process
-- Maintaining the same security and privacy standards as Bitcoin
+We achieve this by leveraging secure Multi-Party Computation (sMPC) Groups to manage BTC locks and validate transactions, a Cross-Chain Mempool to relay transactions deterministically using UTXO features, and a BFT Consensus Layer to provide validator rotation and ensure Byzantine Fault Tolerance. The Node Interface acts as an intermediary, augmenting original nodes to trigger specific logic, receive transactions, and compose mirrored transactions essential for peg-in and peg-out processes, enabling seamless asset mirroring between Bitcoin and Kaon's Consensus Layer.
 
-All while enjoying seamless integration between EVM environments and the UTXO model. Please note - this document is a working draft, and will be continuously updated and improved upon during the development cycle. 
+## Key Components
 
-# Terminology and Architectural Foundation
-
-## Terminology
-| General Terminology | Definition |
-|------|-----|
-| Consensus    | Consensus is a fundamental property of distributed systems where multiple entities must collectively agree on a single value, validate their states, and terminate the decision process - this cannot be guaranteed deterministically in asynchronous systems with arbitrary failures. ([source](https://arxiv.org/pdf/2409.17627))|
-|  Output (UTXO)  |  Single-use batch of Bitcoin that must meet a specific set of conditions in order to be spent.  |
-|  Hierarchical Deterministic (HD) Wallets  |  Cryptographic wallets that generate an infinite number of keys arranged in a tree structure from a single master seed - typically represented as a mnemonic word sequence - where parent keys can derive child keys, which can derive their own child keys, and so on.  |
-|  Invoice Address  |  A single-use token that identifies a Bitcoin transaction's target based on Hierarchical Deterministic Keys; used to prevent address [re-use](https://en.bitcoin.it/wiki/Address_reuse) and to protect user privacy.  |
-|  Partially Signed Bitcoin Transaction (PBST)  |  A Bitcoin standard introduced in [BIP 174](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki) for transactions that are not yet fully signed, designed to improve the interoperability between different wallets, making it easier to conduct complex transactions that require multiple signatures.   |
-|  Pre-Signed Transaction Hash (Payment Preimage)  |  A cryptographic mechanism using hash preimage revelation to prove payment authorization, originally from Lightning Network and adapted for Bitcoin with Taproot signatures to enable secure conditional rollback transactions.  |
-
-| Kaon's Terminology | Definition |
-|------|-----|
-| Delegated Proof of Stake (dPoS)    | Incentivize users to confirm network data and ensure security through a process of collateral staking with an additional use of witnesses (formally called delegates).   |
-|  Delegate Stakes  |  A transaction with specific lock script used in Kaon's dPoS to give a user an ability to participate in the chain's management,  can be combined or delegated. |
-|  Masternode  |  Node connected to a wallet of Stakeholder  |
-|  Byzantine Fault Tolerance (BFT) Consensus  | Non-optimistic provably safe proof-of-stake binary consensus augmented to offer a proof of settlement and distributed key generation (DKG) through deterministic process where its participants take turns round-robin fashion, its consistency and liveness assuming a number of Byzantine corruptions did not exceeded 1/2, and it has the ability to converge back to safety once synchrony is restored.   |
-|  Treshold Signature Scheme (TSS)  |  A method to collectively produce signature where every participant holds only a fragment of a private key, in Kaon's case utilizing Schnorr signature, Shamir Secret Sharing, Simple Coins as a source of deterministic random and Lagrange interpolation.  |
-|  Safe Multiparty Computation (sMPC)   |  Secure multiparty computation (MPC / SMPC) is a cryptographic protocol that distributes a computation across multiple parties (in Kaon’s case secret message sequences or SMSs) where no individual party can see the other parties’ data.  |
-|  Epoch   |  Iteration of 80 blocks 13.(3) minutes long with a strict lifecircle, where election of validators for the next iteration is happened, allowing the BFT consensus to have non-fixed pool of participants in a determenistic manner. |
-|  sMPC Group   |  A set of participants determined by the BFT consensus for the current epoch from the approved set of validators of the current epoch as determined by dPoS consensus.  |
-|  Witness Group   |  sMPC Group with a specific role to approve locked BTCs to be sent or to mark it as corrupt.  |
-|  Validator Group   |  sMPC Group with a specific role to maintain lock over received BTCs and to send it, which could be executed only after the related Witness Group approval. |
-|  Peg In  |  Process of locking BTC in Bitcoin Network to get mirrored BTCs or to perform extended logic.  |
-|  Peg Out  |  Process of sending BTC out of Kaon Network's locking mechanic to a user within the Bitcoin Network.   |
-|  Sweeping  |  Process of delegating BTC locks maintained by Validator and Witness Groups of the previous Epoch to sMPC Groups of the current Epoch.  |
-|  Slashing  |  Execution of validator or group of validators with confiscation of their stakes in case of detected and proven malicious activities, maintained by Kaon's Consensus Layer.  |
-|  Mirrored Transaction |  Transactions that move in either direction - from Bitcoin to Kaon's Consensus Layer or vice versa - when specific instructions are included in the transaction outputs. |
-|  Mirrored BTC |  Bitcoin representation in Kaon's Consensus Layer produced by Mirrored Transaction through the Peg In process.  |
-
-## Architecture
-### Global Components
 | Component | Description |
 |------|-----|
-| Consensus Layer    | L1 system that provides BFT by randomly selecting and rotating participants (validators) that help reach consensus and solve incidents. |
-| Node Interface    | Wraps original node to trigger logic when receiving transactions and helps compose transactions for signing. |
+| Node Interface    | Augments original node to trigger logic when receiving transactions and helps compose transactions for signing. |
 | Cross Chain Mempool    | Ensures deterministic transaction relaying, by using UTXO features (outputs).|
-| BFT Consensus Layer    | Orchestrates data flows between all connected chains by setting up a framework of possible interactions and roles or all participants. |
-### BFT Internal Components
-| Component | Description |
-|------|-----|
-| Epoch   | Determines validator selection for the next iteration, allowing BFT consensus to maintain a deterministic yet dynamic participant pool. |
-| sMPC Group    | A coordinated set of nodes that collectively produce threshold signatures and manage cross-chain operations while operating as either Validators (maintaining locks) or Witnesses (approving operations). |
-| sMPC Paritipant    | An individual node that holds key shares and participates in collective signing processes while monitoring network transactions for its assigned group. |
-### Internal Interactions
-| Component | Description |
-|------|-----|
-| sMPC Participant <-> Node Interface | Broadcasts Mirrored Transactions |
-| Node Interface <-> sMPC Group | Receives transactions and composes Mirrored Transactions |
-| Node Interface <-> Cross Chain Mempool | Detects new transactions to be mirrored and ensures correctness of the process state |
-| sMPC Group <-> Cross Chain Mempool | Pushes prepared and signed Mirrored Transactions to be broadcasted to Bitcoin or Kaon's Consensus Layer. |
-| sMPC Participant <-> Cross Chain Mempool | Broadcasts prepared Mirrored Transaction to Bitcoin or Kaon's Consensus Layer. |
-### External Interactions
-| Component | Description |
-|------|-----|
-| Node Interface <-> Bitcoin Node   | Receives newly confirmed transactions from Bitcoin Network and provides ability to broadcast transactions into Bitcoin Network. |
-| Node Interface <-> Consensus Layer    | Receives newly confirmed transactions from Consensus Layer and provides ability to broadcast transactions into Consensus Layer. |
-| sMPC Group <-> sMPC Participant | Produces an invoice addresses for peg-in transactions and sign Mirrored Transactions |
-| Consensus Layer <-> BFT Consensus | Switches epochs and forms a list of participants for the next epoch, also resolves incidents and applies judgement via slashing. |
-### Component Roles
-| Component | Role |
-|------|-----|
-| State   | Cross Chain Mempool |
-| Observer    | Every sMPC Participant and any other Consensus Layer's node via Node Interface  |
-| Signer | Validators Group, sMPC Participant, Consensus Layer's validators for emergency preimage |
-| Validator | Witness Group |
-| Dispute Resolver | Consensus Layer |
+|  Mirrored Transaction |  Transactions that move in either direction - from Bitcoin to Kaon's Consensus Layer or vice versa - when specific instructions are included in the transaction outputs. |
+| Taproot Subprogram    | Defines acceptable Mirrored transaction and controls Mirroring process. |
 
-# Architecture Overview
-DISCLAMER: This diagram is temporary and will be updated at a later point in time. Diagram descriptions below are general and will also be extended at a later date.
+## Architecture Overview
+
+This diagram is an overview of the architectural framework of Kaon. Definitions for the terminology used in the diagram can be found in the **Terminology** section below.
+
 ```mermaid
 %% Set default font style to Arial for compatibility
 %% Use font-size and color to ensure text displays correctly in PowerPoint
@@ -156,7 +93,7 @@ flowchart RL
     classDef Ash stroke-width:1px, stroke-dasharray:none, stroke:#999999, fill:#EEEEEE, color:#000000, font-family:Arial, font-size:14px
 
 ```
-The architecture is designed to facilitate secure and deterministic cross-chain operations between the Bitcoin network and Kaon's Consensus Layer. At its core is the **Consensus Layer**, an L1 system providing Byzantine BFT by randomly selecting and rotating validators through epochs. Each **Epoch** determines a new set of validators, ensuring a dynamic yet deterministic participant pool.
+The architecture is designed to facilitate secure and deterministic cross-chain operations between the Bitcoin network and Kaon's Consensus Layer. At its core is the Consensus Layer, an L1 system providing **BFT** (Byzantine Fault Tolerance) by randomly selecting and rotating validators through epochs. Each **Epoch** determines a new set of validators, ensuring a dynamic yet deterministic participant pool.
 
 Validators are organized into **sMPC Groups** (secure Multi-Party Computation groups), which are coordinated sets of nodes responsible for collectively producing threshold signatures and managing cross-chain operations. These groups have specific roles:
 
@@ -165,13 +102,129 @@ Validators are organized into **sMPC Groups** (secure Multi-Party Computation gr
 
 Individual nodes within these groups are called **sMPC Participants**. They hold key shares, participate in collective signing processes, and monitor network transactions for their assigned group.
 
-The **Node Interface** serves as an intermediary, wrapping original nodes to trigger specific logic upon receiving transactions and assisting in composing Mirrored Transactions. These transactions are pivotal for the **Peg In** and **Peg Out** processes, effectively mirroring assets between the Bitcoin Network and Kaon's Consensus Layer.
+The **Node Interface** serves as an intermediary, augments original nodes to trigger specific logic upon receiving transactions and assisting in composing Mirrored Transactions. These transactions are pivotal for the **Peg In** and **Peg Out** processes, effectively mirroring assets between the Bitcoin Network and Kaon's Consensus Layer.
 
 To ensure deterministic transaction relaying and maintain process integrity, the **Cross Chain Mempool** leverages UTXO features. It acts as a conduit between sMPC Groups, Node Interfaces, and both networks, facilitating the broadcasting and detection of transactions, and acts as a State manager.
 
 To maintain continuity across epochs, the system employs a process called **Sweeping**, which delegates BTC locks from the Validator and Witness Groups of the previous epoch to the sMPC Groups of the current epoch.
 
 Epoch management is a collaborative effort between the Consensus Layer and the BFT Consensus, determining validator selection for each new epoch. In instances of malicious activity, the Consensus Layer has the authority to enforce slashing, penalizing validators by confiscating their stakes to uphold network integrity.
+
+## Consensus Layer
+
+| Term | Definition |
+|------|-----|
+| Consensus Layer    | L1 system that provides BFT by randomly selecting and rotating participants (validators) that help reach consensus and solve incidents. |
+| Delegated Proof of Stake (dPoS)    | Incentivize users to confirm network data and ensure security through a process of collateral staking with an additional use of witnesses (formally called delegates).   |
+|  Delegate Stakes  |  A transaction with specific lock script used in Kaon's dPoS to give a user an ability to participate in the chain's management,  can be combined or delegated. |
+|  Masternode  |  Node connected to a wallet of Stakeholder.  |
+|  Byzantine Fault Tolerance (BFT) Consensus  | Non-optimistic provably safe proof-of-stake binary consensus augmented to offer a proof of settlement and distributed key generation (DKG) through deterministic process where its participants take turns round-robin fashion, its consistency and liveness assuming a number of Byzantine corruptions did not exceeded 1/2, and it has the ability to converge back to safety once synchrony is restored.   |
+|  Treshold Signature Scheme (TSS)  |  A method to collectively produce signature where every participant holds only a fragment of a private key, in Kaon's case utilizing Schnorr signature, Shamir Secret Sharing, Simple Coins as a source of deterministic random and Lagrange interpolation.  |
+|  Safe Multiparty Computation (sMPC)   |  Secure multiparty computation (MPC / SMPC) is a cryptographic protocol that distributes a computation across multiple parties (in Kaon’s case secret message sequences or SMSs) where no individual party can see the other parties’ data.  |
+
+```mermaid
+sequenceDiagram
+    Node-->>+Consensus Layer: Discover the network
+    Node->>+Consensus Layer: Create stake
+    Consensus Layer->>-Node: Announce Masternode
+    Consensus Layer-->>-Node: End of Epoch
+    Node->>+Consensus Layer: Apply to Validator
+    Consensus Layer-->>+Old Validators: Start Election
+    Old Validators->>-Consensus Layer: Vote for a Candidate
+    Consensus Layer-->>-Node: Selected as<br />Consensus Layer validator
+    Cross-chain Validator->>+Node: Add transaction to mempool
+    Node->>+Consensus Layer: Propose block
+    Consensus Layer-->>-Node: New block
+    Node-->>-Cross-chain Validator: Transaction confirmed
+```
+
+- Step 1: Node discovers the network by connecting to the Consensus Layer.
+- Step 2: Node creates a stake and sends it to the Consensus Layer.
+- Step 3: Consensus Layer's nodes announces the node as a Masternode.
+- Step 4: Consensus Layer notifies the node about the end of an epoch by reaching certain block height.
+- Step 5: Node as a Masternode applies to become a Validator by creating a special transaction.
+- Step 6: Consensus Layer starts an election by reaching certain block height.
+- Step 7: Old Validators vote for a candidate by sending special transactions.
+- Step 8: Consensus Layer informs the node that it has been selected as a Validator.
+- Step 9: Cross-chain Validator adds a transaction to the node's mempool.
+- Step 10: Node as a Validator proposes a block by sending it to the Consensus Layer.
+- Step 11: Nodes of the Consensus Layer accept the block.
+- Step 12: Node confirms the transaction with the Cross-chain Validator.
+
+## BFT Consensus Layer
+
+| Term | Definition |
+|------|-----|
+| BFT Consensus Layer    | Orchestrates data flows between all connected chains by setting up a framework of possible interactions and roles or all participants. |
+| sMPC Group    | A coordinated set of nodes that collectively produce threshold signatures and manage cross-chain operations while operating as either Validators (maintaining locks) or Witnesses (approving operations). |
+|  sMPC Group   |  A set of participants determined by the BFT consensus for the current epoch from the approved set of validators of the current epoch as determined by dPoS consensus.  |
+| sMPC Paritipant    | An individual node that holds key shares and participates in collective signing processes while monitoring network transactions for its assigned group. |
+|  Witness Group   |  sMPC Group with a specific role to approve locked BTCs to be sent or to mark it as corrupt.  |
+|  Validator Group   |  sMPC Group with a specific role to maintain lock over received BTCs and to send it, which could be executed only after the related Witness Group approval. |
+
+At the start of each cycle, we select a group of validators and randomly divide them into clusters. Any validators that can't form a complete cluster sit out for that cycle. These clusters are then randomly assigned roles as either Validators or Witnesses to keep things balanced. Each Validator Group pairs up with a Witness Group to work together, and any group without a partner doesn't participate this time. Each group participates in a Threshold Signature Scheme (TSS) process, where they collaboratively generate signatures, and a slot leader is determined for each session to coordinate the group's activities. The previous groups help distribute tasks fairly by passing on their roles to the new groups, aiming for an even spread of responsibilities. This whole process happens in two overlapping cycles, so groups can smoothly transition their roles and resources between them, making the network more secure and continuous.
+
+<details>
+ 
+  <summary>See detailed description</summary>
+  
+At the commencement of each epoch, a set of $N$ validators is selected to participate in the consensus process, where $N$ can be any positive integer. Utilizing a deterministic randomization mechanism — a simple coin flip based on bytes in the available-to-spend outputs — these validators are grouped into clusters of $k$ validators each (e.g., $k = 7$). The total number of complete groups formed is:
+
+$G = \left\lfloor \frac{N}{k} \right\rfloor$
+
+Validators that cannot form a complete group ($N \mod k$ validators) are excluded from the process in this epoch. This grouping ensures randomness while maintaining deterministic reproducibility, which is critical for decentralized consensus.
+
+Next, these $G$ groups are assigned roles as either Validator Groups or Witness Groups using the same deterministic randomization algorithm. To achieve an equal number of each type — a crucial factor for maintaining network equilibrium — the number of Validator Groups $V$ and Witness Groups $W$ are determined as:
+
+$V = \left\lfloor \frac{G}{2} \right\rfloor, \quad W = G - V$
+
+The groups are then randomly assigned roles accordingly, ensuring statistical balance across the network. Subsequently, these groups are paired to form $P = \min(V, W)$ sets, each comprising one Validator Group and one Witness Group. Any group that remains unpaired due to an unequal number of Validator and Witness Groups will not participate in this epoch's process.
+
+The pairing process employs the same underlying simple coin randomization but is modified to enhance security and unpredictability. Specifically, a deterministic permutation function $\pi$ is applied to the group indices to shuffle them before pairing:
+
+$\pi(i) = \text{Permute}(i, s), \quad i = 1, 2, \dots, G$
+
+where $s$ is a seed derived from blockchain data (e.g., previous block hashes), and $\text{Permute}$ is a deterministic permutation function ensuring that the shuffling is both unpredictable and reproducible. The shuffled groups are then paired sequentially.
+
+Finally, the previous sets from the preceding epoch determine, based on the same deterministic basis, to which new groups they should delegate their locks. The goal is to achieve an equitable distribution across all new groups, which can be represented mathematically by minimizing the variance of delegated locks among groups:
+
+$\text{Minimize} \quad \sigma^2 = \frac{1}{G} \sum_{i=1}^{G} (L_i - \bar{L})^2$
+
+where $L_i$ is the total locks delegated to group $i$, and $\bar{L}$ is the average locks per group. This delegation occurs across two parallel epochs, with one operating at a half-phase delay relative to the other. Consequently, groups effectively transfer locks between these two flows, enhancing the continuity and robustness of the consensus mechanism.
+
+</details>
+
+## Actors' Interactions
+
+### Component Roles
+
+| Component | Role |
+|------|-----|
+| State   | Cross Chain Mempool |
+| Observer    | Every sMPC Participant and any other Consensus Layer's node via Node Interface  |
+| Signer | Validators Group, sMPC Participant, Consensus Layer's validators for emergency preimage |
+| Validator | Witness Group |
+| Dispute Resolver | Consensus Layer |
+
+### Internal Interactions
+
+| Component | Description |
+|------|-----|
+| sMPC Participant <-> Node Interface | Broadcasts Mirrored Transactions |
+| Node Interface <-> sMPC Group | Receives transactions and composes Mirrored Transactions |
+| Node Interface <-> Cross Chain Mempool | Detects new transactions to be mirrored and ensures correctness of the process state |
+| sMPC Group <-> Cross Chain Mempool | Pushes prepared and signed Mirrored Transactions to be broadcasted to Bitcoin or Kaon's Consensus Layer. |
+| sMPC Participant <-> Cross Chain Mempool | Broadcasts prepared Mirrored Transaction to Bitcoin or Kaon's Consensus Layer. |
+
+### External Interactions
+
+| Component | Description |
+|------|-----|
+| Node Interface <-> Bitcoin Node   | Receives newly confirmed transactions from Bitcoin Network and provides ability to broadcast transactions into Bitcoin Network. |
+| Node Interface <-> Consensus Layer    | Receives newly confirmed transactions from Consensus Layer and provides ability to broadcast transactions into Consensus Layer. |
+| sMPC Group <-> sMPC Participant | Produces an invoice addresses for peg-in transactions and sign Mirrored Transactions |
+| Consensus Layer <-> BFT Consensus | Switches epochs and forms a list of participants for the next epoch, also resolves incidents and applies judgement via slashing. |
+
 
 The interactions between components are as follows:
 
@@ -185,7 +238,13 @@ The interactions between components are as follows:
 Overall, the architecture is designed to handle cross-chain operations securely, transparently and uncontrollable. Through the coordinated efforts of sMPC Groups, deterministic transaction management, and a resilient consensus mechanism, the Kaon Network ensures efficient, continuous and secure interactions with the Bitcoin Network.
 
 # Peg-In Process (Inbound)
+
+| Kaon's Terminology | Definition |
+|------|-----|
+|  Peg In  |  Process of locking BTC in Bitcoin Network to get mirrored BTCs or to perform extended logic.  |
+
 This process ensures secure bridging of BTC to kBTC while maintaining user control through matching private keys.
+
 ```mermaid
 sequenceDiagram
   participant User as User
@@ -212,6 +271,7 @@ sequenceDiagram
   Kaon Network -->> User: Mirrored BTC (kBTC) Available
   Note right of User: Access with sender's private keys
 ```
+
 - Step 1: User broadcasts transaction with Kaon Sigscript.
 - Step 2: Bitcoin Network validates and confirms transaction.
 - Step 3: sMPC participants monitor for these peg-in transactions.
@@ -224,7 +284,13 @@ sequenceDiagram
 - Step 11: User can access funds using same private keys (HD wallets supported).
 
 # Peg-Out Process (Outbound)
+
+| Kaon's Terminology | Definition |
+|------|-----|
+|  Peg Out  |  Process of sending BTC out of Kaon Network's locking mechanic to a user within the Bitcoin Network.   |
+
 The peg-out process is a secure method for users to withdraw Bitcoin from Kaon back to the main Bitcoin network.
+
 ```mermaid
 sequenceDiagram
     %% Participants
@@ -255,6 +321,7 @@ sequenceDiagram
     note over Witness Group: Provides Verification and Security through Signatures
     note over Bitcoin Network: Transactions Reflect Ownership Changes Only When Executed
 ```
+
 - Step 1: User sends peg-out request to Consensus Layer by sending kBTC to precompiled smart contract or by sending transaction with a specific taproot script.
 - Step 2: Consensus Layer notifies Validator Group.
 - Step 3: Validator Group prepares peg-out transaction.
@@ -265,6 +332,7 @@ sequenceDiagram
 - Step 8: User receives BTC.
 
 Key Notes:
+
 - Validator signatures require Witness approval for security.
 - Ownership changes finalize upon execution.
 - Witness Group provides security through signatures.
@@ -273,7 +341,9 @@ Key Notes:
 # **Other Important Processes**
 
 # Sweeping
+
 The coordinated transfer of control and funds between validator groups during an epoch transition on Kaon.
+
 ```mermaid
 sequenceDiagram
     %% Participants
@@ -316,6 +386,7 @@ sequenceDiagram
     note right of Validator Group B: New Validators (Next Epoch)
     end
 ```
+
 - Step 1: Consensus Layer initiates epoch transition.
 - Step 2: New validators (Group B) elected.
 - Step 3: Groups overlap during transition.
@@ -331,12 +402,21 @@ sequenceDiagram
 - Step 13: Both validator groups receive BTC commission.
 
 Key Notes:
+
 - Validator actions require witness signatures.
 - Ownership changes finalize upon execution.
 - Previous (A) and Next (B) epoch validators operate during transition.
 
+| Kaon's Terminology | Definition |
+|------|-----|
+|  Sweeping  |  Process of delegating BTC locks maintained by Validator and Witness Groups of the previous Epoch to sMPC Groups of the current Epoch.  |
+|  Epoch   |  Iteration of 80 blocks 13.(3) minutes long with a strict lifecircle, where election of validators for the next iteration is happened, allowing the BFT consensus to have non-fixed pool of participants in a determenistic manner. |
+| Epoch   | Determines validator selection for the next iteration, allowing BFT consensus to maintain a deterministic yet dynamic participant pool. |
+|  Mirrored BTC |  Bitcoin representation in Kaon's Consensus Layer produced by Mirrored Transaction through the Peg In process.  |
+
 # Slashing
 A security mechanism in Kaon that activates when unauthorized actions are detected to ensure network continuity and integrity. The Diagram explains the process using extreme situation when all sMPC Participants in a Validator group are malicious.
+
 ```mermaid
 sequenceDiagram
     participant Validator Group A (Epoch N)
@@ -389,6 +469,7 @@ sequenceDiagram
     note over Bitcoin Network: Taproot script contains preimaged transactions for such events
     end
 ```
+
 - Step 1: Validator Group A performs unauthorized action.
 - Step 2: Every connected Node Interface to Bitcoin Node reports issue to Kaon nodes.
 - Step 3: Consensus Layer broadcasts to Witness Group W1.
@@ -404,7 +485,8 @@ sequenceDiagram
 - Step 13: Group B and W2 confirmed active.
 - Step 14: Network continues with new validator/witness groups.
 
-Key Notes: 
+Key Notes:
+
 - Emergency transfers only between validator groups.
 - Requires witness signature.
 - Taproot script includes pre-signed emergency transactions.
@@ -413,7 +495,12 @@ Key Notes:
 - If there are less then 50% of sMPC operators are malicious, emergency transaction is not required.
 - Jailing process is applied for less severe situation and potentially can lead to eternal ban of the node by its peers.
 
+| Kaon's Terminology | Definition |
+|------|-----|
+|  Slashing  |  Execution of validator or group of validators with confiscation of their stakes in case of detected and proven malicious activities, maintained by Kaon's Consensus Layer.  |
+
 # sMPC Group Monitoring and Seeding
+
 The system enables secure, distributed address generation while preserving privacy through consensus-based validation.
 ```mermaid
 sequenceDiagram
