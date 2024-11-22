@@ -1,7 +1,7 @@
 # Overview
-Kaon is a Bitcoin and UTXO native blockchain with cross-chain composability built by a security-first team. Our mission is to create a stronger fidelity of on-chain transfers of Bitcoin assets. The result is a decentralized consensus layer that not only offers the first cryptographically secure mirrored BTC, but is also bridge-less and oracle-less to make Bitcoin ecosystem interoperability secure, composable and scalable. 
+Kaon is a Bitcoin and UTXO native blockchain with cross-chain composability. Our mission is to create a stronger fidelity of on-chain transfers of Bitcoin assets. The result is a decentralized consensus layer that not only offers the first cryptographically secure mirrored BTC, but is also bridge-less and oracle-less to make Bitcoin ecosystem interoperability secure, composable and scalable. 
 
-# Architectural and Terminology Foundation
+# Architecture and Terminology
 
 Kaon augments Bitcoin Nodes within the structure of Kaon to enable subprograms, which then introduces synthetic statefulness into Bitcoin. In doing so, we are able to implement on-chain programmability within Bitcoin, and facilitate high fidelity asset transfers of Bitcoin assets cross-chain.
 
