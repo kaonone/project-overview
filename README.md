@@ -5,13 +5,13 @@ Kaon is a Bitcoin and UTXO native blockchain with cross-chain composability. Our
 
 Kaon augments Bitcoin Nodes within the structure of Kaon to enable subprograms, which then introduces synthetic statefulness into Bitcoin. In doing so, we are able to implement on-chain programmability within Bitcoin, and facilitate high fidelity asset transfers of Bitcoin assets cross-chain.
 
-We achieve this by leveraging secure Multi-Party Computation (sMPC) Groups to manage BTC locks and validate transactions, a Cross-Chain Mempool to relay transactions deterministically using UTXO features, and a BFT Consensus Layer to provide validator rotation and ensure Byzantine Fault Tolerance. The Node Interface acts as an intermediary, augmenting original nodes to trigger specific logic, receive transactions, and compose mirrored transactions essential for peg-in and peg-out processes, enabling seamless asset mirroring between Bitcoin and Kaon's Consensus Layer.
+We achieve this by leveraging secure Multi-Party Computation (sMPC) Groups to manage BTC locks and validate transactions, a Cross-Chain Mempool to relay transactions deterministically using UTXO features, and a BFT Consensus Layer to provide validator rotation and ensure Byzantine Fault Tolerance. The Node Augmentation acts as an intermediary, augmenting original nodes to trigger specific logic, receive transactions, and compose mirrored transactions essential for peg-in and peg-out processes, enabling seamless asset mirroring between Bitcoin and Kaon's Consensus Layer.
 
 ## Key Components
 
 | Component | Description |
 |------|-----|
-| Node Interface    | Augments original node to trigger logic when receiving transactions and helps compose transactions for signing. |
+| Node Augmentation    | Augments original node to trigger logic when receiving transactions and helps compose transactions for signing. |
 | Cross Chain Mempool    | Ensures deterministic transaction relaying, by using UTXO features (outputs).|
 |  Mirrored Transaction |  Transactions that move in either direction - from Bitcoin to Kaon's Consensus Layer or vice versa - when specific instructions are included in the transaction outputs. |
 | Taproot Subprogram    | Defines acceptable Mirrored transaction and controls Mirroring process. |
@@ -36,7 +36,7 @@ flowchart RL
 
  subgraph s4[" "]
     direction TB
-         NI["Node Interface"]
+         NI["Node Augmentation"]
  end
  style NI fill:none,stroke:#000000,font-family:Arial,font-size:14px
  style s4 fill:none,stroke-width:0px,font-family:Arial
@@ -102,9 +102,9 @@ Validators are organized into **sMPC Groups** (secure Multi-Party Computation gr
 
 Individual nodes within these groups are called **sMPC Participants**. They hold key shares, participate in collective signing processes, and monitor network transactions for their assigned group.
 
-The **Node Interface** serves as an intermediary, augments original nodes to trigger specific logic upon receiving transactions and assisting in composing Mirrored Transactions. These transactions are pivotal for the **Peg In** and **Peg Out** processes, effectively mirroring assets between the Bitcoin Network and Kaon's Consensus Layer.
+The **Node Augmentation** serves as an intermediary, augments original nodes to trigger specific logic upon receiving transactions and assisting in composing Mirrored Transactions. These transactions are pivotal for the **Peg In** and **Peg Out** processes, effectively mirroring assets between the Bitcoin Network and Kaon's Consensus Layer.
 
-To ensure deterministic transaction relaying and maintain process integrity, the **Cross Chain Mempool** leverages UTXO features. It acts as a conduit between sMPC Groups, Node Interfaces, and both networks, facilitating the broadcasting and detection of transactions, and acts as a State manager.
+To ensure deterministic transaction relaying and maintain process integrity, the **Cross Chain Mempool** leverages UTXO features. It acts as a conduit between sMPC Groups, Node Augmentations, and both networks, facilitating the broadcasting and detection of transactions, and acts as a State manager.
 
 To maintain continuity across epochs, the system employs a process called **Sweeping**, which delegates BTC locks from the Validator and Witness Groups of the previous epoch to the sMPC Groups of the current epoch.
 
@@ -201,7 +201,7 @@ where $L_i$ is the total locks delegated to group $i$, and $\bar{L}$ is the aver
 | Component | Role |
 |------|-----|
 | State   | Cross Chain Mempool |
-| Observer    | Every sMPC Participant and any other Consensus Layer's node via Node Interface  |
+| Observer    | Every sMPC Participant and any other Consensus Layer's node via Node Augmentation  |
 | Signer | Validators Group, sMPC Participant, Consensus Layer's validators for emergency preimage |
 | Validator | Witness Group |
 | Dispute Resolver | Consensus Layer |
@@ -210,9 +210,9 @@ where $L_i$ is the total locks delegated to group $i$, and $\bar{L}$ is the aver
 
 | Component | Description |
 |------|-----|
-| sMPC Participant <-> Node Interface | Broadcasts Mirrored Transactions |
-| Node Interface <-> sMPC Group | Receives transactions and composes Mirrored Transactions |
-| Node Interface <-> Cross Chain Mempool | Detects new transactions to be mirrored and ensures correctness of the process state |
+| sMPC Participant <-> Node Augmentation | Broadcasts Mirrored Transactions |
+| Node Augmentation <-> sMPC Group | Receives transactions and composes Mirrored Transactions |
+| Node Augmentation <-> Cross Chain Mempool | Detects new transactions to be mirrored and ensures correctness of the process state |
 | sMPC Group <-> Cross Chain Mempool | Pushes prepared and signed Mirrored Transactions to be broadcasted to Bitcoin or Kaon's Consensus Layer. |
 | sMPC Participant <-> Cross Chain Mempool | Broadcasts prepared Mirrored Transaction to Bitcoin or Kaon's Consensus Layer. |
 
@@ -220,17 +220,17 @@ where $L_i$ is the total locks delegated to group $i$, and $\bar{L}$ is the aver
 
 | Component | Description |
 |------|-----|
-| Node Interface <-> Bitcoin Node   | Receives newly confirmed transactions from Bitcoin Network and provides ability to broadcast transactions into Bitcoin Network. |
-| Node Interface <-> Consensus Layer    | Receives newly confirmed transactions from Consensus Layer and provides ability to broadcast transactions into Consensus Layer. |
+| Node Augmentation <-> Bitcoin Node   | Receives newly confirmed transactions from Bitcoin Network and provides ability to broadcast transactions into Bitcoin Network. |
+| Node Augmentation <-> Consensus Layer    | Receives newly confirmed transactions from Consensus Layer and provides ability to broadcast transactions into Consensus Layer. |
 | sMPC Group <-> sMPC Participant | Produces an invoice addresses for peg-in transactions and sign Mirrored Transactions |
 | Consensus Layer <-> BFT Consensus | Switches epochs and forms a list of participants for the next epoch, also resolves incidents and applies judgement via slashing. |
 
 
 The interactions between components are as follows:
 
-- The **Node Interface** provides to the **Cross Chain Mempool** utility to detect transactions' state.
-- **sMPC Participants** broadcast mirrored transactions through the **Node Interface**.
-- The **Node Interface** processes confirmed transactions with specific taproot signature with message "KAON" on its first leaf and interacts through the **Cross Chain Mempool** with sMPC Groups to ensure the correctness of the process state.
+- The **Node Augmentation** provides to the **Cross Chain Mempool** utility to detect transactions' state.
+- **sMPC Participants** broadcast mirrored transactions through the **Node Augmentation**.
+- The **Node Augmentation** processes confirmed transactions with specific taproot signature with message "KAON" on its first leaf and interacts through the **Cross Chain Mempool** with sMPC Groups to ensure the correctness of the process state.
 - The **Cross Chain Mempool** interacts with sMPC Groups to receive prepared and signed mirrored transactions for broadcasting.
 - **sMPC Groups** represents collaboration of its sMPC Participants to produce invoice addresses for peg-in transactions and sign mirrored transactions using PBST standard.
 - The **Consensus Layer** works with the BFT Consensus mechanism to switch epochs, form new participant lists, resolve incidents, and apply judgments via slashing.
@@ -471,7 +471,7 @@ sequenceDiagram
 ```
 
 - Step 1: Validator Group A performs unauthorized action.
-- Step 2: Every connected Node Interface to Bitcoin Node reports issue to Kaon nodes.
+- Step 2: Every connected Node Augmentation to Bitcoin Node reports issue to Kaon nodes.
 - Step 3: Consensus Layer broadcasts to Witness Group W1.
 - Step 4: W1 detects malicious activity.
 - Step 5: Signs rejection branch of Taproot Script.
